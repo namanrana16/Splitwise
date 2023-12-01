@@ -74,4 +74,19 @@ router.get('/GetUsersFromGroup/:tableName', async (req, res) => {
     }
   });
   
+  // GET - GetAllDataFromTable
+router.get('/GetAllData/:tableName', async (req, res) => {
+    try {
+      const { tableName } = req.params;
+  
+      // Fetch all users from the specified table
+      const getUsersQuery = `SELECT * FROM ${tableName}`;
+      const users = await db.queryGroups(getUsersQuery);
+  
+      res.status(200).json({ success: true, users });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred while fetching users from the table.' });
+    }
+  });
 module.exports = router;
