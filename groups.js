@@ -3,8 +3,8 @@ const router = express.Router();
 const db = require('./db');
 const crypto = require('crypto');
 
-// POST - CreateTableWithUsers
-router.post('/CreateTableWithUsers', async (req, res) => {
+// POST - CreateGroupTableWithUsers
+router.post('/CreateGroupWithUsers', async (req, res) => {
   try {
     const { userUUIDList } = req.body;
 
@@ -55,4 +55,23 @@ router.post('/CreateTableWithUsers', async (req, res) => {
   }
 });
 
+// GET - GetUsersFromGroupTable
+router.get('/GetUsersFromGroup/:tableName', async (req, res) => {
+    try {
+      const { tableName } = req.params;
+  
+      // Fetch UserUUIDs from the specified table
+      const getUserUUIDsQuery = `SELECT "UserUUID" FROM ${tableName}`;
+      const result = await db.queryGroups(getUserUUIDsQuery);
+      
+      // Extract UserUUIDs from the result
+      const userUUIDs = result.rows.map(row => row.UserUUID);
+  
+      res.status(200).json({ success: true, userUUIDs });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred while fetching UserUUIDs from the table.' });
+    }
+  });
+  
 module.exports = router;
