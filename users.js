@@ -10,7 +10,7 @@ router.get('/UserByEmailPass', async (req, res) => {
   try {
     const { email, password } = req.query;
     const hashedInput = crypto.createHash('sha256').update(`${email}-${password}`).digest('hex');
-    const { rows } = await db.query('SELECT user_uuid FROM users WHERE password_hash = $1', [hashedInput]);
+    const { rows } = await db.queryUsers('SELECT user_uuid FROM users WHERE password_hash = $1', [hashedInput]);
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -24,7 +24,7 @@ router.post('/CreateUser', async (req, res) => {
     const { name, email, password } = req.body;
     const hashedInput = crypto.createHash('sha256').update(`${email}-${password}`).digest('hex');
     const user_uuid = crypto.randomUUID();
-    const { rows } = await db.query(
+    const { rows } = await db.queryUsers(
       'INSERT INTO users (user_uuid, name, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING *',
       [user_uuid, name, email, hashedInput]
     );
@@ -40,7 +40,7 @@ router.put('/UpdateUser', async (req, res) => {
   try {
     const { user_uuid, name, password } = req.body;
     const hashedInput = crypto.createHash('sha256').update(`${email}-${password}`).digest('hex');
-    const { rows } = await db.query(
+    const { rows } = await db.queryUsers(
       'UPDATE users SET name = $1, password_hash = $2 WHERE user_uuid = $3 RETURNING *',
       [name, hashedInput, user_uuid]
     );

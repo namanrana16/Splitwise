@@ -2,9 +2,11 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 const users = require('./users');
+const groups = require('./groups');
 
 app.use(express.json());
-app.use('/users', users);  
+app.use('/users', users); 
+app.use('/groups', groups);
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
