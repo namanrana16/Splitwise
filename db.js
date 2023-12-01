@@ -1,13 +1,22 @@
 const { Pool } = require('pg');
 
-const pool = new Pool({
-  user: 'pranshu.chandra',
+const poolUsers = new Pool({
   host: 'localhost',
-  database: 'postgres',
-  password: 'password',
+  database: 'users',
+  user: 'postgres',
+  password: 'krypton',
+  port: 5432
+});
+
+const poolGroups = new Pool({
+  host: 'localhost',
+  database: 'groups',
+  user: 'postgres',
+  password: 'krypton',
   port: 5432
 });
 
 module.exports = {
-  query: (text, params) => pool.query(text, params)
+  queryUsers: (text, params) => poolUsers.query(text, params),
+  queryGroups: (text, params) => poolGroups.query(text, params)
 };
