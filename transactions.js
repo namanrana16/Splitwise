@@ -117,4 +117,46 @@ router.post('/Settle', async (req, res) => {
     }
   });
 
+  // POST - SettleGroup
+router.post('/SettleGroup/:groupName', async (req, res) => {
+    try {
+      const { groupName } = req.params;
+  
+      // Validate that groupName is provided
+      if (!groupName) {
+        return res.status(400).json({ error: 'Invalid input. Please provide groupName.' });
+      }
+  
+      // Validate that the group table exists
+      const checkTableQuery = `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '${groupName}')`;
+      const tableExistsResult = await db.queryGroups(checkTableQuery);
+      const tableExists = tableExistsResult.rows[0].exists;
+  
+      if (!tableExists) {
+        return res.status(400).json({ error: `Table '${groupName}' does not exist.` });
+      }
+  
+      // Get the column names (excluding UserUUID)
+      const getColumnNamesQuery = `
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = '${groupName}' AND column_name != 'UserUUID'
+      `;
+      const columnNamesResult = await db.queryGroups(getColumnNamesQuery);
+      const columnNames = columnNamesResult.rows.map(row => row.column_name);
+  
+      // Update all columns except UserUUID to 0
+      const resetColumnsQuery = `
+        UPDATE ${groupName}
+        SET ${columnNames.map(column => `"${column}" = 0`).join(', ')}
+      `;
+      await db.queryGroups(resetColumnsQuery);
+  
+      res.status(200).json({ success: true, message: 'Columns reset successfully.', groupName });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred while resetting columns in the group table.' });
+    }
+  });
+
 module.exports = router;
