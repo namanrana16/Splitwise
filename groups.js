@@ -89,4 +89,86 @@ router.get('/GetAllData/:tableName', async (req, res) => {
       res.status(500).json({ error: 'An error occurred while fetching users from the table.' });
     }
   });
+
+  // PUT - AddUsersToTable
+router.patch('/AddUsersToGroup/:groupName', async (req, res) => {
+    try {
+      const { groupName } = req.params;
+      const { userUUIDList } = req.body;
+  
+      // Validate that the userUUIDList is an array
+      if (!Array.isArray(userUUIDList)) {
+        return res.status(400).json({ error: 'Invalid input. Please provide an array of userUUIDs.' });
+      }
+  
+      // Generate column definitions for the new columns
+      const newColumnDefinitions = userUUIDList.map(uuid => `"${uuid}" INT DEFAULT 0`);
+  
+      // Add new columns to the table
+      const alterTableQuery = `
+        ALTER TABLE ${groupName}
+        ADD COLUMN ${newColumnDefinitions.join(', ')}
+      `;
+      await db.queryGroups(alterTableQuery);
+  
+      // Generate rows with user_uuid and default values (0) using a for loop
+    const insertRowsQueries = [];
+    for (const uuid of userUUIDList) {
+      const insertRowQuery = `
+        INSERT INTO ${groupName} ("UserUUID")
+        VALUES
+        ('${uuid}');
+      `;
+      insertRowsQueries.push(insertRowQuery);
+    }
+
+    console.log(insertRowsQueries);
+
+    // Execute the queries to insert rows
+    for (const query of insertRowsQueries) {
+      await db.queryGroups(query);
+    }
+  
+      res.status(200).json({ success: true, message: 'Users added to the table successfully.', groupName });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred while adding users to the table.' });
+    }
+  });
+
+  // DELETE - DeleteUsersFromGroup
+router.delete('/DeleteUsersFromGroup/:tableName', async (req, res) => {
+    try {
+      const { tableName } = req.params;
+      const { userUUIDList } = req.body;
+  
+      // Validate that the userUUIDList is an array
+      if (!Array.isArray(userUUIDList)) {
+        return res.status(400).json({ error: 'Invalid input. Please provide an array of userUUIDs.' });
+      }
+  
+      // Generate column names for deletion
+      const columnsToDelete = userUUIDList.map(uuid => `"${uuid}"`);
+  
+      // Delete columns from the table
+      const dropColumnsQuery = `
+        ALTER TABLE ${tableName}
+        DROP COLUMN IF EXISTS ${columnsToDelete.join(', ')}
+      `;
+      await db.queryGroups(dropColumnsQuery);
+  
+      // Delete rows where UserUUID in userUUIDList
+      const deleteRowsQuery = `
+        DELETE FROM ${tableName}
+        WHERE "UserUUID" IN (${userUUIDList.map(uuid => `'${uuid}'`).join(', ')})
+      `;
+      await db.queryGroups(deleteRowsQuery);
+  
+      res.status(200).json({ success: true, message: 'Users deleted from the table successfully.', tableName });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred while deleting users from the table.' });
+    }
+  });
+
 module.exports = router;
