@@ -4,14 +4,14 @@ const port = process.env.PORT || 3000;
 const users = require('./users');
 const groups = require('./groups');
 const transactions = require('./transactions')
-const mongo = require('./mongo')
+const transactionDocs = require('./transactionDocs')
 
 
 app.use(express.json());
 app.use('/users', users);
 app.use('/groups', groups);
 app.use('/transactions', transactions);
-app.use('/mongo', mongo);
+app.use('/transactionDocs', transactionDocs);
 
 
 app.get('/', (req, res) => {
